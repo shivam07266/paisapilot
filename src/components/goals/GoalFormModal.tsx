@@ -77,12 +77,18 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Goa Trip, New Phone, Emergency Fund"
+            aria-invalid={Boolean(errors.name)}
+            aria-describedby={errors.name ? 'goal-name-error' : undefined}
             className={`w-full px-3 py-2 bg-slate-950 border rounded-lg text-white text-xs focus:ring-2 focus:ring-blue-500 ${
               errors.name ? 'border-rose-500' : 'border-slate-800'
             }`}
             required
           />
-          {errors.name && <p className="text-xs text-rose-400 mt-1">{errors.name}</p>}
+          {errors.name && (
+            <p id="goal-name-error" role="alert" className="text-xs text-rose-400 mt-1">
+              {errors.name}
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -100,13 +106,19 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({
                 value={targetAmount}
                 onChange={(e) => setTargetAmount(e.target.value)}
                 placeholder="5000"
+                aria-invalid={Boolean(errors.targetAmount)}
+                aria-describedby={errors.targetAmount ? 'goal-target-error' : undefined}
                 className={`w-full pl-7 pr-3 py-2 bg-slate-950 border rounded-lg text-white text-xs focus:ring-2 focus:ring-blue-500 ${
                   errors.targetAmount ? 'border-rose-500' : 'border-slate-800'
                 }`}
                 required
               />
             </div>
-            {errors.targetAmount && <p className="text-xs text-rose-400 mt-1">{errors.targetAmount}</p>}
+            {errors.targetAmount && (
+              <p id="goal-target-error" role="alert" className="text-xs text-rose-400 mt-1">
+                {errors.targetAmount}
+              </p>
+            )}
           </div>
 
           <div>
@@ -138,12 +150,18 @@ export const GoalFormModal: React.FC<GoalFormModalProps> = ({
             type="date"
             value={targetDate}
             onChange={(e) => setTargetDate(e.target.value)}
+            aria-invalid={Boolean(errors.targetDate)}
+            aria-describedby={errors.targetDate ? 'goal-date-error' : undefined}
             className={`w-full px-3 py-2 bg-slate-950 border rounded-lg text-white text-xs focus:ring-2 focus:ring-blue-500 ${
               errors.targetDate ? 'border-rose-500' : 'border-slate-800'
             }`}
             required
           />
-          {errors.targetDate && <p className="text-xs text-rose-400 mt-1">{errors.targetDate}</p>}
+          {errors.targetDate && (
+            <p id="goal-date-error" role="alert" className="text-xs text-rose-400 mt-1">
+              {errors.targetDate}
+            </p>
+          )}
         </div>
 
         <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">

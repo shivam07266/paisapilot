@@ -4,9 +4,8 @@ import {
   calculateDaysRemaining,
   calculateHealthScore,
   calculateRiskAssessment,
-  simulateScenario,
 } from '../domain/financeEngine';
-import { AppState, Commitment, SavingsGoal, Transaction } from '../domain/types';
+import { Commitment, SavingsGoal, Transaction } from '../domain/types';
 
 describe('financeEngine', () => {
   const baseCommitments: Commitment[] = [
@@ -175,5 +174,41 @@ describe('financeEngine', () => {
 
     const pastDays = calculateDaysRemaining('2026-10-10', '2026-10-21');
     expect(pastDays).toBe(0); // clamped to 0
+  });
+
+  // Test 8: Explainable health score breakdown
+  it('8. calculates explainable health score breakdown factors with transparent point weights', () => {
+    const summary = calculateFinanceSummary(10000, [], baseCommitments, baseSavingsGoals, 15);
+    const healthResult = calculateHealthScore(summary, [], []);
+
+    expect(healthResult.factors.budgetSustainability.max).toBe(30);
+    expect(healthResult.factors.spendingDiscipline.max).toBe(25);
+    expect(healthResult.factors.commitmentCoverage.max).toBe(20);
+    expect(healthResult.factors.emergencyReserve.max).toBe(15);
+    expect(healthResult.factors.savingsFeasibility.max).toBe(10);
+    expect(healthResult.overallScore).toBeGreaterThanOrEqual(0);
+    expect(healthResult.overallScore).toBeLessThanOrEqual(100);
+  });
+
+  // Test 9: Burn rate and projected end balance
+  it('9. computes burn rate and projected end balance across remaining cycle', () => {
+    const transactions: Transaction[] = [
+      {
+        id: 't-food',
+        type: 'expense',
+        category: 'Food',
+        amount: 3000,
+        date: '2026-10-10',
+        description: 'Groceries and dining',
+      },
+    ];
+
+    // Starting budget: 10,000, expense: 3,000 -> cash = 7,000
+    // Remaining days = 20 -> elapsed days = 10 -> burnRate = 3000 / 10 = 300/day
+    const summary = calculateFinanceSummary(10000, transactions, [], [], 20);
+
+    expect(summary.currentCash).toBe(7000);
+    expect(summary.burnRatePerDay).toBe(300);
+    expect(summary.dailySpendingAllowance).toBe(350); // 7000 / 20 = 350
   });
 });

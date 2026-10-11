@@ -23,6 +23,12 @@ describe('validation and sanitization', () => {
     expect(validateAmount(9999999999).isValid).toBe(false);
   });
 
+  it('validates date strings reliably', () => {
+    expect(validateDate('2026-10-15').isValid).toBe(true);
+    expect(validateDate('').isValid).toBe(false);
+    expect(validateDate('not-a-date').isValid).toBe(false);
+  });
+
   it('12. validateTransactionInput validates required fields correctly', () => {
     const valid = validateTransactionInput({
       type: 'expense',
@@ -63,4 +69,20 @@ describe('validation and sanitization', () => {
     expect(Array.isArray(recovered.transactions)).toBe(true);
     expect(recovered.savingsGoals.length).toBe(0);
   });
+
+  it('14. sanitizeAppState rejects prototype pollution and NaN values gracefully', () => {
+    const demoState = createInitialDemoState();
+    const maliciousPayload = {
+      __proto__: { polluted: true },
+      startingBudget: NaN,
+      transactions: [{ amount: 'not-num' }, { amount: -500 }, { amount: 150, description: 'Safe' }],
+    };
+
+    const result = sanitizeAppState(maliciousPayload, demoState);
+    expect((Object.prototype as unknown as { polluted?: boolean }).polluted).toBeUndefined();
+    expect(result.startingBudget).toBe(demoState.startingBudget);
+    expect(result.transactions.length).toBe(1);
+    expect(result.transactions[0].amount).toBe(150);
+  });
 });
+

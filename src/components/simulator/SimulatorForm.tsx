@@ -61,7 +61,7 @@ export const SimulatorForm: React.FC<SimulatorFormProps> = ({
   const [category, setCategory] = useState<ExpenseCategory>(activeScenario?.category || 'Shopping');
   const [amount, setAmount] = useState<string>(activeScenario ? String(activeScenario.amount) : '2000');
   const [date, setDate] = useState<string>(
-    activeScenario?.proposedDate || new Date().toISOString().split('T')[0]
+    () => activeScenario?.proposedDate || new Date().toISOString().split('T')[0]
   );
   const [isRecurring, setIsRecurring] = useState<boolean>(activeScenario?.isRecurring || false);
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +74,7 @@ export const SimulatorForm: React.FC<SimulatorFormProps> = ({
     setError(null);
 
     onSimulate({
-      id: `sim-${Date.now()}`,
+      id: `sim-${preset.name.toLowerCase().replace(/\s+/g, '-')}`,
       name: preset.name,
       category: preset.category,
       amount: preset.amount,
@@ -159,7 +159,7 @@ export const SimulatorForm: React.FC<SimulatorFormProps> = ({
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
           <div>
             <label htmlFor="sim-name" className="block text-xs font-medium text-slate-300 mb-1">
               Purchase / Expense Name
@@ -211,6 +211,20 @@ export const SimulatorForm: React.FC<SimulatorFormProps> = ({
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label htmlFor="sim-date" className="block text-xs font-medium text-slate-300 mb-1">
+              Proposed Date
+            </label>
+            <input
+              id="sim-date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
           </div>
         </div>
 

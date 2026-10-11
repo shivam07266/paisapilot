@@ -20,7 +20,6 @@ import {
   AlertTriangle,
   Lightbulb,
   Info,
-  Calendar,
 } from 'lucide-react';
 
 export const InsightsPage: React.FC = () => {

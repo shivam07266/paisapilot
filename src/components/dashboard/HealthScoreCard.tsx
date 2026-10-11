@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card } from '../ui/Card';
 import { HealthScoreBreakdown, RiskAssessment } from '../../domain/types';
-import { ShieldCheck, AlertTriangle, ChevronDown, ChevronUp, Sparkles, AlertCircle } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, AlertCircle } from 'lucide-react';
 
 interface HealthScoreCardProps {
   health: HealthScoreBreakdown;

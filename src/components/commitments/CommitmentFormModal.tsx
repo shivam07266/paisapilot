@@ -87,12 +87,18 @@ export const CommitmentFormModal: React.FC<CommitmentFormModalProps> = ({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Wi-Fi bill, Gym pass, College fee"
+            aria-invalid={Boolean(errors.name)}
+            aria-describedby={errors.name ? 'com-name-error' : undefined}
             className={`w-full px-3 py-2 bg-slate-950 border rounded-lg text-white text-xs focus:ring-2 focus:ring-blue-500 ${
               errors.name ? 'border-rose-500' : 'border-slate-800'
             }`}
             required
           />
-          {errors.name && <p className="text-xs text-rose-400 mt-1">{errors.name}</p>}
+          {errors.name && (
+            <p id="com-name-error" role="alert" className="text-xs text-rose-400 mt-1">
+              {errors.name}
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -110,13 +116,19 @@ export const CommitmentFormModal: React.FC<CommitmentFormModalProps> = ({
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="799"
+                aria-invalid={Boolean(errors.amount)}
+                aria-describedby={errors.amount ? 'com-amount-error' : undefined}
                 className={`w-full pl-7 pr-3 py-2 bg-slate-950 border rounded-lg text-white text-xs focus:ring-2 focus:ring-blue-500 ${
                   errors.amount ? 'border-rose-500' : 'border-slate-800'
                 }`}
                 required
               />
             </div>
-            {errors.amount && <p className="text-xs text-rose-400 mt-1">{errors.amount}</p>}
+            {errors.amount && (
+              <p id="com-amount-error" role="alert" className="text-xs text-rose-400 mt-1">
+                {errors.amount}
+              </p>
+            )}
           </div>
 
           <div>
@@ -128,12 +140,18 @@ export const CommitmentFormModal: React.FC<CommitmentFormModalProps> = ({
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
+              aria-invalid={Boolean(errors.dueDate)}
+              aria-describedby={errors.dueDate ? 'com-date-error' : undefined}
               className={`w-full px-3 py-2 bg-slate-950 border rounded-lg text-white text-xs focus:ring-2 focus:ring-blue-500 ${
                 errors.dueDate ? 'border-rose-500' : 'border-slate-800'
               }`}
               required
             />
-            {errors.dueDate && <p className="text-xs text-rose-400 mt-1">{errors.dueDate}</p>}
+            {errors.dueDate && (
+              <p id="com-date-error" role="alert" className="text-xs text-rose-400 mt-1">
+                {errors.dueDate}
+              </p>
+            )}
           </div>
         </div>
 

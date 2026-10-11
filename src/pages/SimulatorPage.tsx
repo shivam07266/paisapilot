@@ -6,7 +6,7 @@ import { SimulatorForm } from '../components/simulator/SimulatorForm';
 import { ScenarioResults } from '../components/simulator/ScenarioResults';
 import { ScenarioComparison } from '../components/simulator/ScenarioComparison';
 import { Card } from '../components/ui/Card';
-import { Sparkles, ArrowLeftRight, HelpCircle, CheckCircle2 } from 'lucide-react';
+import { Sparkles, ArrowLeftRight, CheckCircle2 } from 'lucide-react';
 
 export const SimulatorPage: React.FC = () => {
   const { state, addTransaction } = useFinance();

@@ -165,53 +165,111 @@ export function validateCommitmentInput(data: {
 
 /**
  * Validates state imported from JSON or LocalStorage, sanitizing safely.
+ * Prevents prototype pollution, NaN values, negative balances, and oversized payloads.
  */
 export function sanitizeAppState(raw: unknown, defaultState: AppState): AppState {
-  if (!raw || typeof raw !== 'object') {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
     return defaultState;
   }
 
-  const candidate = raw as Partial<AppState>;
+  const candidate = raw as Record<string, unknown>;
 
-  const startingBudget = typeof candidate.startingBudget === 'number' && candidate.startingBudget >= 0
-    ? candidate.startingBudget
-    : defaultState.startingBudget;
+  const startingBudget =
+    typeof candidate.startingBudget === 'number' &&
+    Number.isFinite(candidate.startingBudget) &&
+    candidate.startingBudget >= 0 &&
+    candidate.startingBudget <= 10000000
+      ? Math.round(candidate.startingBudget * 100) / 100
+      : defaultState.startingBudget;
 
-  const period = candidate.period && typeof candidate.period.startDate === 'string' && typeof candidate.period.endDate === 'string'
-    ? candidate.period
-    : defaultState.period;
+  const candidatePeriod = candidate.period as Record<string, unknown> | undefined;
+  const period =
+    candidatePeriod &&
+    typeof candidatePeriod.startDate === 'string' &&
+    typeof candidatePeriod.endDate === 'string' &&
+    !isNaN(new Date(candidatePeriod.startDate).getTime()) &&
+    !isNaN(new Date(candidatePeriod.endDate).getTime())
+      ? {
+          startDate: candidatePeriod.startDate,
+          endDate: candidatePeriod.endDate,
+          totalDays:
+            typeof candidatePeriod.totalDays === 'number' && candidatePeriod.totalDays > 0
+              ? candidatePeriod.totalDays
+              : defaultState.period.totalDays,
+        }
+      : defaultState.period;
 
   const transactions: Transaction[] = Array.isArray(candidate.transactions)
-    ? candidate.transactions.filter(
-        (t): t is Transaction =>
-          Boolean(t) &&
-          typeof t.id === 'string' &&
-          typeof t.amount === 'number' &&
-          !isNaN(t.amount) &&
-          (t.type === 'income' || t.type === 'expense') &&
-          typeof t.description === 'string'
-      )
+    ? candidate.transactions
+        .filter(
+          (t): t is Record<string, unknown> =>
+            Boolean(t) &&
+            typeof t === 'object' &&
+            typeof t.amount === 'number' &&
+            Number.isFinite(t.amount) &&
+            t.amount > 0
+        )
+        .map((t) => ({
+          id: typeof t.id === 'string' && t.id.trim() ? t.id.trim().slice(0, 50) : `tx-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          amount: Math.round((t.amount as number) * 100) / 100,
+          type: t.type === 'income' ? ('income' as const) : ('expense' as const),
+          category: (typeof t.category === 'string' &&
+          ([...VALID_EXPENSE_CATEGORIES, ...VALID_INCOME_CATEGORIES] as string[]).includes(t.category)
+            ? t.category
+            : 'Other') as Transaction['category'],
+          description: typeof t.description === 'string' && t.description.trim() ? t.description.trim().slice(0, 100) : 'Transaction',
+          date: typeof t.date === 'string' && !isNaN(new Date(t.date).getTime()) ? t.date : new Date().toISOString().split('T')[0],
+          isRecurring: Boolean(t.isRecurring),
+          createdAt: typeof t.createdAt === 'string' ? t.createdAt : new Date().toISOString(),
+        }))
     : defaultState.transactions;
 
   const savingsGoals: SavingsGoal[] = Array.isArray(candidate.savingsGoals)
-    ? candidate.savingsGoals.filter(
-        (g): g is SavingsGoal =>
-          Boolean(g) &&
-          typeof g.id === 'string' &&
-          typeof g.name === 'string' &&
-          typeof g.targetAmount === 'number' &&
-          typeof g.currentAmount === 'number'
-      )
+    ? candidate.savingsGoals
+        .filter(
+          (g): g is Record<string, unknown> =>
+            Boolean(g) &&
+            typeof g === 'object' &&
+            typeof g.name === 'string' &&
+            g.name.trim().length > 0 &&
+            typeof g.targetAmount === 'number' &&
+            Number.isFinite(g.targetAmount) &&
+            g.targetAmount > 0
+        )
+        .map((g) => ({
+          id: typeof g.id === 'string' && g.id.trim() ? g.id.trim().slice(0, 50) : `goal-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          name: (g.name as string).trim().slice(0, 50),
+          targetAmount: Math.round((g.targetAmount as number) * 100) / 100,
+          currentAmount: typeof g.currentAmount === 'number' && Number.isFinite(g.currentAmount) && g.currentAmount >= 0 ? Math.round(g.currentAmount * 100) / 100 : 0,
+          targetDate: typeof g.targetDate === 'string' && !isNaN(new Date(g.targetDate).getTime()) ? g.targetDate : new Date().toISOString().split('T')[0],
+          category: typeof g.category === 'string' ? g.category.slice(0, 30) : undefined,
+          isCompleted: Boolean(g.isCompleted),
+          createdAt: typeof g.createdAt === 'string' ? g.createdAt : new Date().toISOString(),
+        }))
     : defaultState.savingsGoals;
 
   const commitments: Commitment[] = Array.isArray(candidate.commitments)
-    ? candidate.commitments.filter(
-        (c): c is Commitment =>
-          Boolean(c) &&
-          typeof c.id === 'string' &&
-          typeof c.name === 'string' &&
-          typeof c.amount === 'number'
-      )
+    ? candidate.commitments
+        .filter(
+          (c): c is Record<string, unknown> =>
+            Boolean(c) &&
+            typeof c === 'object' &&
+            typeof c.name === 'string' &&
+            c.name.trim().length > 0 &&
+            typeof c.amount === 'number' &&
+            Number.isFinite(c.amount) &&
+            c.amount > 0
+        )
+        .map((c) => ({
+          id: typeof c.id === 'string' && c.id.trim() ? c.id.trim().slice(0, 50) : `com-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          name: (c.name as string).trim().slice(0, 50),
+          amount: Math.round((c.amount as number) * 100) / 100,
+          dueDate: typeof c.dueDate === 'string' && !isNaN(new Date(c.dueDate).getTime()) ? c.dueDate : new Date().toISOString().split('T')[0],
+          recurrence: (c.recurrence === 'weekly' || c.recurrence === 'monthly' || c.recurrence === 'one-time' ? c.recurrence : 'monthly') as Commitment['recurrence'],
+          category: (typeof c.category === 'string' ? c.category : 'Bills') as Commitment['category'],
+          status: (c.status === 'paid' ? 'paid' : 'upcoming') as Commitment['status'],
+          notes: typeof c.notes === 'string' ? c.notes.slice(0, 100) : undefined,
+        }))
     : defaultState.commitments;
 
   const categoryBudgets = Array.isArray(candidate.categoryBudgets)

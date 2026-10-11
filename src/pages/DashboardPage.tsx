@@ -9,13 +9,11 @@ import { TransactionForm } from '../components/transactions/TransactionForm';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
-import { formatINR, formatDate, getCategoryColor } from '../utils/formatting';
+import { formatINR, formatDate } from '../utils/formatting';
 import {
   Plus,
   Sparkles,
   ArrowRight,
-  TrendingUp,
-  AlertTriangle,
   Target,
   CalendarClock,
   ArrowDownRight,

@@ -5,7 +5,7 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
 import { ProgressBar } from '../ui/ProgressBar';
-import { Target, Plus, Minus, Trash2, Calendar, CheckCircle2 } from 'lucide-react';
+import { Target, Plus, Minus, Trash2, Calendar } from 'lucide-react';
 
 interface GoalCardProps {
   goal: SavingsGoal;

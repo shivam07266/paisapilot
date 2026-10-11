@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { useFinance } from '../hooks/useFinance';
 import { ExpenseCategory } from '../domain/types';
 import { VALID_EXPENSE_CATEGORIES } from '../utils/validation';
-import { formatINR, formatPercent, getCategoryColor } from '../utils/formatting';
+import { formatINR, getCategoryColor } from '../utils/formatting';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { ProgressBar } from '../components/ui/ProgressBar';
-import { PieChart, AlertTriangle, CheckCircle, Edit3 } from 'lucide-react';
+import { AlertTriangle, Edit3 } from 'lucide-react';
 
 export const BudgetPage: React.FC = () => {
   const { state, updateCategoryBudget } = useFinance();
@@ -62,9 +62,15 @@ export const BudgetPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="text-right">
-          <span className="text-xs text-slate-400">Total Envelope Limits: </span>
-          <strong className="text-sm font-bold text-white">{formatINR(totalAllocated)}</strong>
+        <div className="text-right flex flex-wrap gap-3 items-center">
+          <div>
+            <span className="text-xs text-slate-400">Total Spent: </span>
+            <strong className="text-sm font-bold text-rose-400">{formatINR(totalSpent)}</strong>
+          </div>
+          <div>
+            <span className="text-xs text-slate-400">Total Limits: </span>
+            <strong className="text-sm font-bold text-white">{formatINR(totalAllocated)}</strong>
+          </div>
         </div>
       </div>
 

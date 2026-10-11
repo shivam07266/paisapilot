@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Transaction, ExpenseCategory, IncomeCategory } from '../../domain/types';
 import { Button } from '../ui/Button';
 import { VALID_EXPENSE_CATEGORIES, VALID_INCOME_CATEGORIES, validateTransactionInput } from '../../utils/validation';
@@ -25,18 +25,19 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   const [type, setType] = useState<'income' | 'expense'>(initialData?.type || 'expense');
   const [category, setCategory] = useState<string>(initialData?.category || 'Food');
   const [amount, setAmount] = useState<string>(initialData ? String(initialData.amount) : '');
-  const [date, setDate] = useState<string>(initialData?.date || new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState<string>(() => initialData?.date || new Date().toISOString().split('T')[0]);
   const [description, setDescription] = useState<string>(initialData?.description || '');
   const [isRecurring, setIsRecurring] = useState<boolean>(initialData?.isRecurring || false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    if (type === 'income' && !VALID_INCOME_CATEGORIES.includes(category as IncomeCategory)) {
+  const handleTypeChange = (newType: 'income' | 'expense') => {
+    setType(newType);
+    if (newType === 'income' && !VALID_INCOME_CATEGORIES.includes(category as IncomeCategory)) {
       setCategory('Allowance');
-    } else if (type === 'expense' && !VALID_EXPENSE_CATEGORIES.includes(category as ExpenseCategory)) {
+    } else if (newType === 'expense' && !VALID_EXPENSE_CATEGORIES.includes(category as ExpenseCategory)) {
       setCategory('Food');
     }
-  }, [type, category]);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +74,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={() => setType('expense')}
+            onClick={() => handleTypeChange('expense')}
             className={`py-2 px-3 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
               type === 'expense'
                 ? 'bg-rose-500/20 text-rose-300 border-rose-500/50'
@@ -84,7 +85,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => setType('income')}
+            onClick={() => handleTypeChange('income')}
             className={`py-2 px-3 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
               type === 'income'
                 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50'
@@ -111,13 +112,19 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             placeholder="e.g. 250"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
+            aria-invalid={Boolean(errors.amount)}
+            aria-describedby={errors.amount ? 'tx-amount-error' : undefined}
             className={`w-full pl-8 pr-3 py-2 bg-slate-900 border rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               errors.amount ? 'border-rose-500' : 'border-slate-800'
             }`}
             required
           />
         </div>
-        {errors.amount && <p className="text-[11px] text-rose-400 mt-1">{errors.amount}</p>}
+        {errors.amount && (
+          <p id="tx-amount-error" role="alert" className="text-[11px] text-rose-400 mt-1">
+            {errors.amount}
+          </p>
+        )}
       </div>
 
       {/* Description */}
@@ -131,12 +138,18 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           placeholder="e.g. Lunch with project team"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+          aria-invalid={Boolean(errors.description)}
+          aria-describedby={errors.description ? 'tx-desc-error' : undefined}
           className={`w-full px-3 py-2 bg-slate-900 border rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             errors.description ? 'border-rose-500' : 'border-slate-800'
           }`}
           required
         />
-        {errors.description && <p className="text-[11px] text-rose-400 mt-1">{errors.description}</p>}
+        {errors.description && (
+          <p id="tx-desc-error" role="alert" className="text-[11px] text-rose-400 mt-1">
+            {errors.description}
+          </p>
+        )}
       </div>
 
       {/* Category & Date Grid */}
@@ -174,12 +187,18 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
+            aria-invalid={Boolean(errors.date)}
+            aria-describedby={errors.date ? 'tx-date-error' : undefined}
             className={`w-full px-3 py-2 bg-slate-900 border rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               errors.date ? 'border-rose-500' : 'border-slate-800'
             }`}
             required
           />
-          {errors.date && <p className="text-[11px] text-rose-400 mt-1">{errors.date}</p>}
+          {errors.date && (
+            <p id="tx-date-error" role="alert" className="text-[11px] text-rose-400 mt-1">
+              {errors.date}
+            </p>
+          )}
         </div>
       </div>
 

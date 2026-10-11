@@ -4,7 +4,7 @@ import { simulateScenario } from '../../domain/financeEngine';
 import { formatINR } from '../../utils/formatting';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
-import { ArrowLeftRight, CheckCircle2, TrendingDown } from 'lucide-react';
+import { ArrowLeftRight, CheckCircle2 } from 'lucide-react';
 
 interface ScenarioComparisonProps {
   state: AppState;

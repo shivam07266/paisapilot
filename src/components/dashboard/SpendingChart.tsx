@@ -115,6 +115,27 @@ export const SpendingChart: React.FC<SpendingChartProps> = ({ transactions }) =>
             </div>
           ))}
         </div>
+
+        {/* Screen Reader Accessible Table Summary */}
+        <table className="sr-only">
+          <caption>Spending Breakdown by Category</caption>
+          <thead>
+            <tr>
+              <th scope="col">Category</th>
+              <th scope="col">Amount</th>
+              <th scope="col">Percentage</th>
+            </tr>
+          </thead>
+          <tbody>
+            {categoryData.items.map((item) => (
+              <tr key={item.name}>
+                <td>{item.name}</td>
+                <td>{formatINR(item.value)}</td>
+                <td>{formatPercent(item.percent)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </Card>
   );
