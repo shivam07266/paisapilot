@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useDeferredValue } from 'react';
 import { Transaction } from '../../domain/types';
 import { formatINR, formatDate, getCategoryColor } from '../../utils/formatting';
 import { Button } from '../ui/Button';
@@ -12,12 +12,13 @@ interface TransactionListProps {
   onDelete: (id: string) => void;
 }
 
-export const TransactionList: React.FC<TransactionListProps> = ({
+export const TransactionList: React.FC<TransactionListProps> = React.memo(({
   transactions,
   onEdit,
   onDelete,
 }) => {
   const [search, setSearch] = useState('');
+  const deferredSearch = useDeferredValue(search);
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [selectedType, setSelectedType] = useState<string>('ALL');
   const [txToDelete, setTxToDelete] = useState<Transaction | null>(null);
@@ -37,8 +38,8 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       if (selectedCategory !== 'ALL' && tx.category !== selectedCategory) return false;
 
       // Search query
-      if (search.trim()) {
-        const q = search.toLowerCase();
+      if (deferredSearch.trim()) {
+        const q = deferredSearch.toLowerCase();
         const matchesDesc = tx.description.toLowerCase().includes(q);
         const matchesCat = tx.category.toLowerCase().includes(q);
         const matchesAmount = tx.amount.toString().includes(q);
@@ -47,7 +48,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
 
       return true;
     });
-  }, [transactions, selectedType, selectedCategory, search]);
+  }, [transactions, selectedType, selectedCategory, deferredSearch]);
 
   const confirmDelete = () => {
     if (txToDelete) {
@@ -61,19 +62,27 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       {/* Search and Filters Bar */}
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
         <div className="relative flex-1">
-          <Search className="h-4 w-4 absolute left-3 top-2.5 text-slate-400" />
+          <label htmlFor="tx-search-input" className="sr-only">
+            Search transactions by description, category, or amount
+          </label>
+          <Search className="h-4 w-4 absolute left-3 top-2.5 text-slate-400" aria-hidden="true" />
           <input
+            id="tx-search-input"
             type="text"
             placeholder="Search by description, category, or amount..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-9 pr-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         <div className="flex gap-2">
           {/* Type Filter */}
+          <label htmlFor="tx-type-filter" className="sr-only">
+            Filter transactions by type
+          </label>
           <select
+            id="tx-type-filter"
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
             className="px-2.5 py-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -84,7 +93,11 @@ export const TransactionList: React.FC<TransactionListProps> = ({
           </select>
 
           {/* Category Filter */}
+          <label htmlFor="tx-category-filter" className="sr-only">
+            Filter transactions by category
+          </label>
           <select
+            id="tx-category-filter"
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
             className="px-2.5 py-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -221,4 +234,6 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       </Modal>
     </div>
   );
-};
+});
+
+TransactionList.displayName = 'TransactionList';

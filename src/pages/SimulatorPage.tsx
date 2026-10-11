@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useFinance } from '../hooks/useFinance';
-import { SimulationResult, SimulationScenario } from '../domain/types';
+import { SimulationScenario } from '../domain/types';
 import { simulateScenario } from '../domain/financeEngine';
 import { SimulatorForm } from '../components/simulator/SimulatorForm';
 import { ScenarioResults } from '../components/simulator/ScenarioResults';
@@ -20,32 +20,30 @@ export const SimulatorPage: React.FC = () => {
     proposedDate: new Date().toISOString().split('T')[0],
   }));
 
-  const [simulationResult, setSimulationResult] = useState<SimulationResult | null>(() => {
-    return simulateScenario(state, {
-      id: 'default-sim',
-      name: 'Wireless Headphones',
-      category: 'Shopping',
-      amount: 2000,
-      proposedDate: new Date().toISOString().split('T')[0],
-    });
-  });
+  // Deterministically derive simulation result from current state and active scenario
+  const simulationResult = useMemo(() => {
+    if (!activeScenario) return null;
+    return simulateScenario(state, activeScenario);
+  }, [state, activeScenario]);
 
   const [showComparison, setShowComparison] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!notification) return;
+    const timer = setTimeout(() => setNotification(null), 4000);
+    return () => clearTimeout(timer);
+  }, [notification]);
+
   const handleSimulate = (scenario: SimulationScenario) => {
     setActiveScenario(scenario);
-    const result = simulateScenario(state, scenario);
-    setSimulationResult(result);
     setNotification(null);
   };
 
   const handleReset = () => {
     setActiveScenario(null);
-    setSimulationResult(null);
     setShowComparison(false);
     setNotification('Simulator reset. Actual finances were not affected.');
-    setTimeout(() => setNotification(null), 4000);
   };
 
   const handleApplyDecision = (scenarioToApply?: SimulationScenario) => {
@@ -62,9 +60,10 @@ export const SimulatorPage: React.FC = () => {
       notes: 'Applied from PaisaPilot What-If Simulator',
     });
 
-    setNotification(`Successfully committed "${target.name}" for ₹${target.amount.toLocaleString('en-IN')} into actual finances!`);
+    setNotification(
+      `Successfully committed "${target.name}" for ₹${target.amount.toLocaleString('en-IN')} into actual finances!`
+    );
     setActiveScenario(null);
-    setSimulationResult(null);
     setShowComparison(false);
   };
 
@@ -103,7 +102,11 @@ export const SimulatorPage: React.FC = () => {
       </div>
 
       {notification && (
-        <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-900/50 flex items-center gap-2 text-xs text-emerald-300 animate-in fade-in">
+        <div
+          role="status"
+          aria-live="polite"
+          className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-900/50 flex items-center gap-2 text-xs text-emerald-300 animate-in fade-in"
+        >
           <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
           <span>{notification}</span>
         </div>
@@ -137,7 +140,7 @@ export const SimulatorPage: React.FC = () => {
           <div className="p-3 mx-auto w-fit rounded-full bg-blue-500/10 text-blue-400 mb-3">
             <Sparkles className="h-6 w-6" />
           </div>
-          <h3 className="text-sm font-semibold text-white">Simulator is Ready</h3>
+          <h2 className="text-sm font-semibold text-white">Simulator is Ready</h2>
           <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1">
             Select a preset above or enter a custom amount to see how your daily allowance, savings goals, and risk profile would respond.
           </p>

@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, Suspense, lazy } from 'react';
 import { Link } from 'react-router-dom';
 import { useFinance } from '../hooks/useFinance';
 import { BalanceCard } from '../components/dashboard/BalanceCard';
 import { DailyAllowanceCard } from '../components/dashboard/DailyAllowanceCard';
 import { HealthScoreCard } from '../components/dashboard/HealthScoreCard';
-import { SpendingChart } from '../components/dashboard/SpendingChart';
 import { TransactionForm } from '../components/transactions/TransactionForm';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
@@ -20,13 +19,25 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 
+// Lazy-load heavy Recharts visualization to keep initial JS critical path minimal
+const SpendingChart = lazy(() =>
+  import('../components/dashboard/SpendingChart').then((m) => ({ default: m.SpendingChart }))
+);
+
+/**
+ * Primary Financial Cockpit view displaying real-time liquidity, daily allowance pacing,
+ * explainable health score, spending category breakdown, and connected obligations.
+ */
 export const DashboardPage: React.FC = () => {
   const { state, summary, health, risk, addTransaction, payCommitment } = useFinance();
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const recentTransactions = state.transactions.slice(0, 5);
-  const upcomingCommitments = state.commitments.filter((c) => c.status !== 'paid').slice(0, 3);
-  const activeGoals = state.savingsGoals.slice(0, 2);
+  const recentTransactions = useMemo(() => state.transactions.slice(0, 5), [state.transactions]);
+  const upcomingCommitments = useMemo(
+    () => state.commitments.filter((c) => c.status !== 'paid').slice(0, 3),
+    [state.commitments]
+  );
+  const activeGoals = useMemo(() => state.savingsGoals.slice(0, 2), [state.savingsGoals]);
 
   return (
     <div className="space-y-6">
@@ -80,7 +91,19 @@ export const DashboardPage: React.FC = () => {
           <HealthScoreCard health={health} risk={risk} />
         </div>
         <div className="lg:col-span-7">
-          <SpendingChart transactions={state.transactions} />
+          <Suspense
+            fallback={
+              <Card
+                className="bg-slate-900/90 border-slate-800 min-h-[16rem] flex items-center justify-center text-xs text-slate-400"
+                role="status"
+                aria-live="polite"
+              >
+                Loading spending visualization...
+              </Card>
+            }
+          >
+            <SpendingChart transactions={state.transactions} />
+          </Suspense>
         </div>
       </div>
 
@@ -90,21 +113,21 @@ export const DashboardPage: React.FC = () => {
         <Card className="bg-slate-900/90 border-slate-800 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-xs uppercase font-bold tracking-wider text-slate-300">
+              <h2 className="text-xs uppercase font-bold tracking-wider text-slate-300">
                 Recent Activity
-              </h3>
+              </h2>
               <Link
                 to="/transactions"
                 className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 font-medium"
               >
                 <span>View all</span>
-                <ArrowRight className="h-3 w-3" />
+                <ArrowRight className="h-3 w-3" aria-hidden="true" />
               </Link>
             </div>
 
             <div className="mt-3 space-y-2">
               {recentTransactions.length === 0 ? (
-                <div className="py-6 text-center text-xs text-slate-500">No transactions recorded yet.</div>
+                <div className="py-6 text-center text-xs text-slate-400">No transactions recorded yet.</div>
               ) : (
                 recentTransactions.map((tx) => {
                   const isExpense = tx.type === 'expense';
@@ -119,11 +142,15 @@ export const DashboardPage: React.FC = () => {
                             isExpense ? 'bg-rose-500/10 text-rose-400' : 'bg-emerald-500/10 text-emerald-400'
                           }`}
                         >
-                          {isExpense ? <ArrowDownRight className="h-3 w-3" /> : <ArrowUpRight className="h-3 w-3" />}
+                          {isExpense ? (
+                            <ArrowDownRight className="h-3 w-3" aria-hidden="true" />
+                          ) : (
+                            <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
+                          )}
                         </div>
                         <div className="min-w-0">
                           <p className="font-semibold text-slate-200 truncate">{tx.description}</p>
-                          <p className="text-[10px] text-slate-500">{formatDate(tx.date)}</p>
+                          <p className="text-[10px] text-slate-400">{formatDate(tx.date)}</p>
                         </div>
                       </div>
                       <span className={`font-bold ml-2 shrink-0 ${isExpense ? 'text-rose-400' : 'text-emerald-400'}`}>
@@ -143,23 +170,23 @@ export const DashboardPage: React.FC = () => {
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-1.5">
-                <CalendarClock className="h-3.5 w-3.5 text-amber-400" />
-                <h3 className="text-xs uppercase font-bold tracking-wider text-slate-300">
+                <CalendarClock className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" />
+                <h2 className="text-xs uppercase font-bold tracking-wider text-slate-300">
                   Upcoming Commitments
-                </h3>
+                </h2>
               </div>
               <Link
                 to="/commitments"
                 className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 font-medium"
               >
                 <span>Manage</span>
-                <ArrowRight className="h-3 w-3" />
+                <ArrowRight className="h-3 w-3" aria-hidden="true" />
               </Link>
             </div>
 
             <div className="mt-3 space-y-2">
               {upcomingCommitments.length === 0 ? (
-                <div className="py-6 text-center text-xs text-slate-500">No unpaid commitments pending!</div>
+                <div className="py-6 text-center text-xs text-slate-400">No unpaid commitments pending!</div>
               ) : (
                 upcomingCommitments.map((c) => (
                   <div
@@ -175,7 +202,8 @@ export const DashboardPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => payCommitment(c.id)}
-                        className="text-[10px] px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 font-medium cursor-pointer"
+                        aria-label={`Pay ${c.name}`}
+                        className="text-[10px] px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                       >
                         Pay
                       </button>
@@ -192,23 +220,23 @@ export const DashboardPage: React.FC = () => {
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-1.5">
-                <Target className="h-3.5 w-3.5 text-blue-400" />
-                <h3 className="text-xs uppercase font-bold tracking-wider text-slate-300">
+                <Target className="h-3.5 w-3.5 text-blue-400" aria-hidden="true" />
+                <h2 className="text-xs uppercase font-bold tracking-wider text-slate-300">
                   Savings Targets
-                </h3>
+                </h2>
               </div>
               <Link
                 to="/goals"
                 className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 font-medium"
               >
                 <span>Explore</span>
-                <ArrowRight className="h-3 w-3" />
+                <ArrowRight className="h-3 w-3" aria-hidden="true" />
               </Link>
             </div>
 
             <div className="mt-3 space-y-3">
               {activeGoals.length === 0 ? (
-                <div className="py-6 text-center text-xs text-slate-500">No savings targets created yet.</div>
+                <div className="py-6 text-center text-xs text-slate-400">No savings targets created yet.</div>
               ) : (
                 activeGoals.map((g) => {
                   const pct = Math.min(100, Math.round((g.currentAmount / g.targetAmount) * 100));
@@ -218,10 +246,17 @@ export const DashboardPage: React.FC = () => {
                         <span className="font-semibold text-slate-200">{g.name}</span>
                         <span className="font-bold text-emerald-400">{formatINR(g.currentAmount)}</span>
                       </div>
-                      <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mb-1">
+                      <div
+                        className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mb-1"
+                        role="progressbar"
+                        aria-valuenow={pct}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label={`${g.name} savings progress`}
+                      >
                         <div className="h-full bg-blue-500 rounded-full" style={{ width: `${pct}%` }} />
                       </div>
-                      <div className="flex justify-between text-[10px] text-slate-500">
+                      <div className="flex justify-between text-[10px] text-slate-400">
                         <span>Target: {formatINR(g.targetAmount)}</span>
                         <span>{pct}% saved</span>
                       </div>

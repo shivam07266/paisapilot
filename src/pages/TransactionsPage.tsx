@@ -14,7 +14,7 @@ export const TransactionsPage: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
 
-  const handleEditSubmit = (data: any) => {
+  const handleEditSubmit = (data: Omit<Transaction, 'id' | 'createdAt'>) => {
     if (editingTx) {
       editTransaction(editingTx.id, data);
       setEditingTx(null);

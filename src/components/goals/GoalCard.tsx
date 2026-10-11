@@ -15,7 +15,7 @@ interface GoalCardProps {
   onDelete: (id: string) => void;
 }
 
-export const GoalCard: React.FC<GoalCardProps> = ({
+export const GoalCard: React.FC<GoalCardProps> = React.memo(({
   goal,
   usableBalance,
   onContribute,
@@ -76,7 +76,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({
               <Target className="h-4 w-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">{goal.name}</h3>
+              <h2 className="text-sm font-bold text-white">{goal.name}</h2>
               <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-0.5">
                 <Calendar className="h-3 w-3" />
                 <span>Target: {formatDate(goal.targetDate)}</span>
@@ -87,7 +87,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({
           <button
             type="button"
             onClick={() => onDelete(goal.id)}
-            className="p-1 rounded text-slate-500 hover:text-rose-400 hover:bg-slate-800"
+            className="p-1 rounded text-slate-400 hover:text-rose-400 hover:bg-slate-800"
             title="Delete goal"
             aria-label={`Delete ${goal.name}`}
           >
@@ -232,4 +232,6 @@ export const GoalCard: React.FC<GoalCardProps> = ({
       </Modal>
     </Card>
   );
-};
+});
+
+GoalCard.displayName = 'GoalCard';

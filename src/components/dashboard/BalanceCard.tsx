@@ -1,22 +1,30 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Card } from '../ui/Card';
 import { formatINR } from '../../utils/formatting';
 import { FinanceSummary } from '../../domain/types';
 import { Wallet, ShieldAlert, PiggyBank, ArrowDownRight, ArrowUpRight, Info } from 'lucide-react';
 
-interface BalanceCardProps {
+export interface BalanceCardProps {
   summary: FinanceSummary;
 }
 
-export const BalanceCard: React.FC<BalanceCardProps> = ({ summary }) => {
+/**
+ * Displays discretionary liquidity (usable balance), current total cash,
+ * and the reconciled 4-part accounting breakdown.
+ */
+export const BalanceCard: React.FC<BalanceCardProps> = memo(({ summary }) => {
   return (
     <Card className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950/40 border-slate-800">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 pb-4 border-b border-slate-800/80">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xs uppercase font-bold tracking-wider text-slate-400">Discretionary Liquidity</span>
-            <div className="group relative cursor-pointer" title="Usable Balance = Current Cash - Unpaid Commitments - Reserved Savings">
-              <Info className="h-3.5 w-3.5 text-slate-400 hover:text-slate-200" />
+            <h2 className="text-xs uppercase font-bold tracking-wider text-slate-400">Discretionary Liquidity</h2>
+            <div
+              className="group relative cursor-pointer"
+              title="Usable Balance = Current Cash - Unpaid Commitments - Reserved Savings"
+              aria-label="Usable Balance equals Current Cash minus Unpaid Commitments minus Reserved Savings"
+            >
+              <Info className="h-3.5 w-3.5 text-slate-400 hover:text-slate-200" aria-hidden="true" />
             </div>
           </div>
           <div className="flex items-baseline gap-2 mt-1">
@@ -41,7 +49,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ summary }) => {
         {/* Current Real Cash Counter */}
         <div className="flex items-center gap-3 bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
           <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-400">
-            <Wallet className="h-5 w-5" />
+            <Wallet className="h-5 w-5" aria-hidden="true" />
           </div>
           <div>
             <div className="text-[11px] font-medium text-slate-400">Current Total Cash</div>
@@ -61,7 +69,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ summary }) => {
         {/* Received Income */}
         <div className="p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/60">
           <div className="flex items-center gap-1 text-[11px] text-emerald-400">
-            <ArrowUpRight className="h-3 w-3" />
+            <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
             <span>Extra Income</span>
           </div>
           <div className="text-sm font-semibold text-emerald-400 mt-0.5">+{formatINR(summary.receivedIncome)}</div>
@@ -70,7 +78,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ summary }) => {
         {/* Actual Expenses */}
         <div className="p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/60">
           <div className="flex items-center gap-1 text-[11px] text-rose-400">
-            <ArrowDownRight className="h-3 w-3" />
+            <ArrowDownRight className="h-3 w-3" aria-hidden="true" />
             <span>Spent to Date</span>
           </div>
           <div className="text-sm font-semibold text-rose-400 mt-0.5">-{formatINR(summary.paidExpenses)}</div>
@@ -79,7 +87,7 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ summary }) => {
         {/* Locked / Reserved Obligations */}
         <div className="p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/60">
           <div className="flex items-center gap-1 text-[11px] text-amber-400">
-            <ShieldAlert className="h-3 w-3" />
+            <ShieldAlert className="h-3 w-3" aria-hidden="true" />
             <span>Bills & Savings</span>
           </div>
           <div className="text-sm font-semibold text-amber-400 mt-0.5">
@@ -91,15 +99,17 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({ summary }) => {
       {/* Sub-breakdown badges */}
       <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-slate-400 pt-2 border-t border-slate-800/40">
         <span className="flex items-center gap-1">
-          <ShieldAlert className="h-3 w-3 text-amber-400" />
+          <ShieldAlert className="h-3 w-3 text-amber-400" aria-hidden="true" />
           Unpaid Bills Reserved: <strong className="text-slate-300 font-semibold">{formatINR(summary.unpaidCommitmentsReserved)}</strong>
         </span>
-        <span className="text-slate-600">•</span>
+        <span className="text-slate-600" aria-hidden="true">•</span>
         <span className="flex items-center gap-1">
-          <PiggyBank className="h-3 w-3 text-blue-400" />
+          <PiggyBank className="h-3 w-3 text-blue-400" aria-hidden="true" />
           Locked In Savings: <strong className="text-slate-300 font-semibold">{formatINR(summary.savingsReserved)}</strong>
         </span>
       </div>
     </Card>
   );
-};
+});
+
+BalanceCard.displayName = 'BalanceCard';

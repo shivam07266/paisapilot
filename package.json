@@ -6,12 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "typecheck": "tsc -b",
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.3.3",
     "lucide-react": "^1.55.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
@@ -19,6 +19,7 @@
     "recharts": "^3.10.1"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.7",

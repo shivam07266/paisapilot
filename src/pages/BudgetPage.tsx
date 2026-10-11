@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useFinance } from '../hooks/useFinance';
 import { ExpenseCategory } from '../domain/types';
 import { VALID_EXPENSE_CATEGORIES } from '../utils/validation';
@@ -15,29 +15,35 @@ export const BudgetPage: React.FC = () => {
   const [limitInput, setLimitInput] = useState('');
 
   // Calculate spent per category
-  const categoryStats = VALID_EXPENSE_CATEGORIES.map((cat) => {
-    const budgetObj = state.categoryBudgets.find((b) => b.category === cat);
-    const limit = budgetObj ? budgetObj.allocatedLimit : 1000;
+  const categoryStats = useMemo(() => {
+    return VALID_EXPENSE_CATEGORIES.map((cat) => {
+      const budgetObj = state.categoryBudgets.find((b) => b.category === cat);
+      const limit = budgetObj ? budgetObj.allocatedLimit : 1000;
 
-    const spent = state.transactions
-      .filter((t) => t.type === 'expense' && t.category === cat)
-      .reduce((sum, t) => sum + t.amount, 0);
+      const spent = state.transactions
+        .filter((t) => t.type === 'expense' && t.category === cat)
+        .reduce((sum, t) => sum + t.amount, 0);
 
-    const percent = limit > 0 ? Math.round((spent / limit) * 100) : 0;
-    const remaining = limit - spent;
+      const percent = limit > 0 ? Math.round((spent / limit) * 100) : 0;
+      const remaining = limit - spent;
 
+      return {
+        category: cat,
+        limit,
+        spent,
+        percent,
+        remaining,
+        color: getCategoryColor(cat),
+      };
+    });
+  }, [state.categoryBudgets, state.transactions]);
+
+  const { totalAllocated, totalSpent } = useMemo(() => {
     return {
-      category: cat,
-      limit,
-      spent,
-      percent,
-      remaining,
-      color: getCategoryColor(cat),
+      totalAllocated: categoryStats.reduce((sum, c) => sum + c.limit, 0),
+      totalSpent: categoryStats.reduce((sum, c) => sum + c.spent, 0),
     };
-  });
-
-  const totalAllocated = categoryStats.reduce((sum, c) => sum + c.limit, 0);
-  const totalSpent = categoryStats.reduce((sum, c) => sum + c.spent, 0);
+  }, [categoryStats]);
 
   const handleSaveLimit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,7 +100,7 @@ export const BudgetPage: React.FC = () => {
                       className="w-3 h-3 rounded-full shrink-0"
                       style={{ backgroundColor: item.color.bar }}
                     />
-                    <h3 className="text-sm font-bold text-white">{item.category}</h3>
+                    <h2 className="text-sm font-bold text-white">{item.category}</h2>
                   </div>
 
                   <button

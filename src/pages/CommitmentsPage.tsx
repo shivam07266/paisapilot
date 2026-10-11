@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useFinance } from '../hooks/useFinance';
 import { CommitmentList } from '../components/commitments/CommitmentList';
 import { CommitmentFormModal } from '../components/commitments/CommitmentFormModal';
@@ -11,13 +11,16 @@ export const CommitmentsPage: React.FC = () => {
   const { state, summary, addCommitment, payCommitment, deleteCommitment } = useFinance();
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const upcomingTotal = state.commitments
-    .filter((c) => c.status !== 'paid')
-    .reduce((sum, c) => sum + c.amount, 0);
-
-  const paidTotal = state.commitments
-    .filter((c) => c.status === 'paid')
-    .reduce((sum, c) => sum + c.amount, 0);
+  const { upcomingTotal, paidTotal } = useMemo(() => {
+    return {
+      upcomingTotal: state.commitments
+        .filter((c) => c.status !== 'paid')
+        .reduce((sum, c) => sum + c.amount, 0),
+      paidTotal: state.commitments
+        .filter((c) => c.status === 'paid')
+        .reduce((sum, c) => sum + c.amount, 0),
+    };
+  }, [state.commitments]);
 
   return (
     <div className="space-y-6">

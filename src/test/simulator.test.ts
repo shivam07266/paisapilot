@@ -134,4 +134,31 @@ describe('What-If Simulator', () => {
     expect(result.simulatedSummary.usableBalance).toBeLessThan(0);
     expect(result.actionableAlternatives.length).toBeGreaterThan(0);
   });
+
+  it('11. preserves month-end locked savings when within budget and reduces endBalance on deficit', () => {
+    const withinBudgetScenario: SimulationScenario = {
+      id: 'sim-sub',
+      name: 'Cloud GPU Subscription',
+      category: 'Subscriptions',
+      amount: 600,
+      proposedDate: '2026-10-15',
+      isRecurring: true,
+    };
+
+    const safeResult = simulateScenario(initialAppState, withinBudgetScenario);
+    expect(safeResult.simulatedSummary.currentCash).toBe(safeResult.baselineSummary.currentCash - 600);
+    expect(safeResult.usableBalanceDelta).toBe(-600);
+    expect(safeResult.dailyAllowanceDelta).toBeLessThan(0);
+
+    const deficitScenario: SimulationScenario = {
+      id: 'sim-deficit',
+      name: 'Luxury Watch',
+      category: 'Shopping',
+      amount: 9500,
+      proposedDate: '2026-10-15',
+    };
+
+    const deficitResult = simulateScenario(initialAppState, deficitScenario);
+    expect(deficitResult.endBalanceDelta).toBeLessThan(0);
+  });
 });

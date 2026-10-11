@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Commitment } from '../../domain/types';
 import { formatINR, formatDate, getCategoryColor } from '../../utils/formatting';
 import { Button } from '../ui/Button';
@@ -12,15 +12,19 @@ interface CommitmentListProps {
   onDeleteCommitment: (id: string) => void;
 }
 
-export const CommitmentList: React.FC<CommitmentListProps> = ({
+export const CommitmentList: React.FC<CommitmentListProps> = React.memo(({
   commitments,
   onPayCommitment,
   onDeleteCommitment,
 }) => {
   const [payTarget, setPayTarget] = useState<Commitment | null>(null);
 
-  const upcoming = commitments.filter((c) => c.status !== 'paid');
-  const paid = commitments.filter((c) => c.status === 'paid');
+  const { upcoming, paid } = useMemo(() => {
+    return {
+      upcoming: commitments.filter((c) => c.status !== 'paid'),
+      paid: commitments.filter((c) => c.status === 'paid'),
+    };
+  }, [commitments]);
 
   const handleConfirmPay = () => {
     if (payTarget) {
@@ -44,9 +48,9 @@ export const CommitmentList: React.FC<CommitmentListProps> = ({
       {/* Upcoming Section */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs uppercase font-bold tracking-wider text-slate-400">
+          <h2 className="text-xs uppercase font-bold tracking-wider text-slate-400">
             Upcoming & Unpaid Obligations ({upcoming.length})
-          </h3>
+          </h2>
           <span className="text-xs text-amber-400 font-semibold">
             Reserved: {formatINR(upcoming.reduce((s, c) => s + c.amount, 0))}
           </span>
@@ -99,7 +103,7 @@ export const CommitmentList: React.FC<CommitmentListProps> = ({
                       <button
                         type="button"
                         onClick={() => onDeleteCommitment(c.id)}
-                        className="p-1.5 rounded-md text-slate-500 hover:text-rose-400 hover:bg-slate-800"
+                        className="p-1.5 rounded-md text-slate-400 hover:text-rose-400 hover:bg-slate-800"
                         title="Delete commitment"
                         aria-label={`Delete ${c.name}`}
                       >
@@ -117,9 +121,9 @@ export const CommitmentList: React.FC<CommitmentListProps> = ({
       {/* Paid Section */}
       {paid.length > 0 && (
         <div className="pt-2">
-          <h3 className="text-xs uppercase font-bold tracking-wider text-slate-500 mb-3">
+          <h2 className="text-xs uppercase font-bold tracking-wider text-slate-400 mb-3">
             Settled Commitments ({paid.length})
-          </h3>
+          </h2>
           <div className="space-y-2 opacity-75">
             {paid.map((c) => (
               <div
@@ -181,4 +185,6 @@ export const CommitmentList: React.FC<CommitmentListProps> = ({
       </Modal>
     </div>
   );
-};
+});
+
+CommitmentList.displayName = 'CommitmentList';

@@ -46,20 +46,20 @@ export const InsightsPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-blue-400" />
-            <h3 className="text-sm font-semibold text-white">30-Day Cash Trajectory Forecast</h3>
+            <h2 className="text-sm font-semibold text-white">30-Day Cash Trajectory Forecast</h2>
           </div>
           <span className="text-xs text-slate-400">
             Projected End-of-Period: <strong className="text-emerald-400 font-bold">{formatINR(summary.projectedEndBalance)}</strong>
           </span>
         </div>
 
-        <div className="h-72 w-full">
+        <div className="h-72 w-full" role="img" aria-label="30-day cash trajectory forecast line chart">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={forecastData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="dayLabel" stroke="#64748b" fontSize={11} tickLine={false} />
+              <XAxis dataKey="dayLabel" stroke="#94a3b8" fontSize={11} tickLine={false} />
               <YAxis
-                stroke="#64748b"
+                stroke="#94a3b8"
                 fontSize={11}
                 tickLine={false}
                 tickFormatter={(val) => `₹${val}`}
@@ -73,7 +73,10 @@ export const InsightsPage: React.FC = () => {
                   fontSize: '12px',
                   color: '#f8fafc',
                 }}
-                formatter={(val: any) => [formatINR(Number(val) || 0), 'Projected Balance']}
+                formatter={(val: number | string | ReadonlyArray<number | string> | undefined) => [
+                  formatINR(Number(val) || 0),
+                  'Projected Balance',
+                ]}
               />
               <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
               <ReferenceLine y={0} stroke="#ef4444" strokeDasharray="3 3" label="Zero Balance" />
@@ -89,6 +92,25 @@ export const InsightsPage: React.FC = () => {
             </LineChart>
           </ResponsiveContainer>
         </div>
+
+        {/* Accessible screen-reader data table for the 30-day forecast */}
+        <table className="sr-only" aria-label="30-Day Cash Trajectory Forecast Data">
+          <caption>Projected daily balance trajectory over the next 30 days</caption>
+          <thead>
+            <tr>
+              <th scope="col">Day</th>
+              <th scope="col">Projected Balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            {forecastData.map((point) => (
+              <tr key={point.dayLabel}>
+                <td>{point.dayLabel}</td>
+                <td>{formatINR(point.baselineBalance)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
         <div className="mt-4 p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-slate-400 flex items-start gap-2">
           <Info className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
@@ -107,7 +129,7 @@ export const InsightsPage: React.FC = () => {
           <div className="flex items-center justify-between pb-3 border-b border-slate-800">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-amber-400" />
-              <h3 className="text-sm font-semibold text-white">Active Risk Assessment</h3>
+              <h2 className="text-sm font-semibold text-white">Active Risk Assessment</h2>
             </div>
             <span
               className={`text-xs uppercase font-bold px-2.5 py-0.5 rounded-full border ${
@@ -125,8 +147,8 @@ export const InsightsPage: React.FC = () => {
           <div>
             <span className="text-xs font-semibold text-slate-400 uppercase">Identified Signals</span>
             <ul className="mt-2 space-y-1.5 text-xs text-slate-300">
-              {risk.reasons.map((r, i) => (
-                <li key={i} className="flex items-start gap-2 p-2 rounded-lg bg-slate-950/40 border border-slate-800/60">
+              {risk.reasons.map((r) => (
+                <li key={r} className="flex items-start gap-2 p-2 rounded-lg bg-slate-950/40 border border-slate-800/60">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />
                   <span>{r}</span>
                 </li>
@@ -137,8 +159,8 @@ export const InsightsPage: React.FC = () => {
           <div>
             <span className="text-xs font-semibold text-slate-400 uppercase">Recommended Interventions</span>
             <ul className="mt-2 space-y-1.5 text-xs text-slate-300">
-              {risk.recommendations.map((rec, i) => (
-                <li key={i} className="flex items-start gap-2 p-2 rounded-lg bg-blue-950/20 border border-blue-900/30 text-blue-300">
+              {risk.recommendations.map((rec) => (
+                <li key={rec} className="flex items-start gap-2 p-2 rounded-lg bg-blue-950/20 border border-blue-900/30 text-blue-300">
                   <Lightbulb className="h-3.5 w-3.5 text-blue-400 mt-0.5 shrink-0" />
                   <span>{rec}</span>
                 </li>
@@ -152,7 +174,7 @@ export const InsightsPage: React.FC = () => {
           <div className="flex items-center justify-between pb-3 border-b border-slate-800">
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-emerald-400" />
-              <h3 className="text-sm font-semibold text-white">Health Score Architecture</h3>
+              <h2 className="text-sm font-semibold text-white">Health Score Architecture</h2>
             </div>
             <span className="text-xs font-bold text-white bg-slate-800 px-2.5 py-0.5 rounded-full">
               {health.overallScore} / 100
@@ -168,7 +190,14 @@ export const InsightsPage: React.FC = () => {
                     {f.score} / {f.max}
                   </span>
                 </div>
-                <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                <div
+                  className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden"
+                  role="progressbar"
+                  aria-valuenow={f.score}
+                  aria-valuemin={0}
+                  aria-valuemax={f.max}
+                  aria-label={`${f.label} score`}
+                >
                   <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(f.score / f.max) * 100}%` }} />
                 </div>
                 <p className="text-[11px] text-slate-400 mt-1">{f.explanation}</p>
@@ -176,7 +205,7 @@ export const InsightsPage: React.FC = () => {
             ))}
           </div>
 
-          <div className="p-3 rounded-lg bg-slate-950/40 border border-slate-800/60 text-[11px] text-slate-500">
+          <div className="p-3 rounded-lg bg-slate-950/40 border border-slate-800/60 text-[11px] text-slate-400">
             Calculated using normalized heuristic weighting across budget sustainability, spending discipline, obligation coverage, emergency cushion, and goal feasibility.
           </div>
         </Card>

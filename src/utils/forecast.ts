@@ -1,5 +1,9 @@
 import { AppState, SimulationScenario } from '../domain/types';
+import { calculateDaysRemaining, calculateFinanceSummary } from '../domain/financeEngine';
 
+/**
+ * Represents a single day's projected cash position in the 30-day cycle.
+ */
 export interface ForecastDataPoint {
   dayIndex: number;
   date: string;
@@ -12,6 +16,11 @@ export interface ForecastDataPoint {
 
 /**
  * Generates day-by-day financial balance forecast across the 30-day budget period.
+ * Reuses the centralized calculateFinanceSummary engine to prevent formula duplication.
+ *
+ * @param state - Active application financial state
+ * @param scenario - Optional hypothetical purchase scenario for side-by-side trajectory comparison
+ * @returns Array of daily forecast trajectory points
  */
 export function generateMonthlyForecast(
   state: AppState,
@@ -23,16 +32,16 @@ export function generateMonthlyForecast(
   const totalDays = state.period.totalDays || 30;
   const today = new Date();
 
-  // Calculate current cash and daily burn
-  let totalIncome = 0;
-  let totalExpenses = 0;
-  for (const tx of state.transactions) {
-    if (tx.type === 'income') totalIncome += tx.amount;
-    else if (tx.type === 'expense') totalExpenses += tx.amount;
-  }
-  const startingCash = state.startingBudget + totalIncome - totalExpenses;
+  const daysRemaining = calculateDaysRemaining(state.period.endDate);
+  const summary = calculateFinanceSummary(
+    state.startingBudget,
+    state.transactions,
+    state.commitments,
+    state.savingsGoals,
+    daysRemaining
+  );
 
-  // Unpaid commitments mapped by due date
+  // Unpaid commitments mapped by scheduled due date
   const commitmentMap = new Map<string, number>();
   for (const c of state.commitments) {
     if (c.status !== 'paid') {
@@ -41,21 +50,9 @@ export function generateMonthlyForecast(
     }
   }
 
-  // Calculate average daily burn rate
-  const unpaidTotal = state.commitments
-    .filter((c) => c.status !== 'paid')
-    .reduce((sum, c) => sum + c.amount, 0);
-  const savingsTotal = state.savingsGoals.reduce((sum, g) => sum + g.currentAmount, 0);
-  const usableBalance = Math.max(0, startingCash - unpaidTotal - savingsTotal);
-
-  // Remaining days from today
-  const end = new Date(state.period.endDate);
-  const diffTime = end.getTime() - today.getTime();
-  const daysLeft = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-  const dailyPacing = usableBalance / daysLeft;
-
-  let runningBaseline = startingCash;
-  let runningSimulated = scenario ? startingCash - scenario.amount : startingCash;
+  const dailyPacing = summary.dailySpendingAllowance;
+  let runningBaseline = summary.currentCash;
+  let runningSimulated = scenario ? summary.currentCash - scenario.amount : summary.currentCash;
 
   for (let i = 0; i <= totalDays; i++) {
     const curDate = new Date(startDate);
@@ -63,13 +60,10 @@ export function generateMonthlyForecast(
     const dateStr = curDate.toISOString().split('T')[0];
 
     const commitmentDue = commitmentMap.get(dateStr) || 0;
-
-    // Day label
     const dayLabel = `Day ${i + 1}`;
-
     const isToday = curDate.toDateString() === today.toDateString();
 
-    // For future days after today, apply daily pacing and commitments
+    // For future days after today, apply daily pacing and scheduled commitments
     if (curDate >= today && i > 0) {
       runningBaseline = Math.max(0, runningBaseline - dailyPacing - commitmentDue);
       if (scenario) {

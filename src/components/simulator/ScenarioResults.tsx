@@ -14,6 +14,8 @@ import {
   Sparkles,
   RotateCcw,
   Check,
+  Clock,
+  Info,
 } from 'lucide-react';
 
 interface ScenarioResultsProps {
@@ -22,7 +24,7 @@ interface ScenarioResultsProps {
   onReset: () => void;
 }
 
-export const ScenarioResults: React.FC<ScenarioResultsProps> = ({
+export const ScenarioResults: React.FC<ScenarioResultsProps> = React.memo(({
   result,
   onApplyDecision,
   onReset,
@@ -40,10 +42,20 @@ export const ScenarioResults: React.FC<ScenarioResultsProps> = ({
     simulatedHealth,
     dailyAllowanceDelta,
     usableBalanceDelta,
+    endBalanceDelta,
     impactVerdict,
     adviceMessage,
     actionableAlternatives,
   } = result;
+
+  // Deterministic Decision Runway & Pacing Metrics
+  const runwayDaysConsumed =
+    baselineSummary.dailySpendingAllowance > 0
+      ? (scenario.amount / baselineSummary.dailySpendingAllowance).toFixed(1)
+      : '∞';
+  const reducedAmount = Math.round(scenario.amount * 0.7);
+  const savedByReducing = scenario.amount - reducedAmount;
+  const twoWeekDailySaveRate = Math.ceil(scenario.amount / 14);
 
   const handleConfirmApply = () => {
     setIsApplied(true);
@@ -90,7 +102,7 @@ export const ScenarioResults: React.FC<ScenarioResultsProps> = ({
       >
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
           <div className="flex items-center gap-2">
-            <span className="text-xs uppercase font-bold tracking-wider text-slate-400">Simulation Outcome</span>
+            <h2 className="text-xs uppercase font-bold tracking-wider text-slate-400">Simulation Outcome</h2>
             <span className="text-xs font-medium text-slate-300">
               "{scenario.name}" (₹{scenario.amount.toLocaleString('en-IN')})
             </span>
@@ -108,16 +120,16 @@ export const ScenarioResults: React.FC<ScenarioResultsProps> = ({
               <span>Recommended Alternatives & Action Plan:</span>
             </div>
             <ul className="list-disc list-inside text-xs text-slate-300 space-y-1 pl-1">
-              {actionableAlternatives.map((alt, idx) => (
-                <li key={idx}>{alt}</li>
+              {actionableAlternatives.map((alt) => (
+                <li key={alt}>{alt}</li>
               ))}
             </ul>
           </div>
         )}
       </Card>
 
-      {/* Side-by-Side Comparison Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Side-by-Side Comparison Metrics (5 Key Dimensions) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Metric 1: Usable Balance */}
         <Card className="bg-slate-900/90 border-slate-800">
           <div className="text-[11px] font-semibold text-slate-400 uppercase">Usable Balance</div>
@@ -126,7 +138,7 @@ export const ScenarioResults: React.FC<ScenarioResultsProps> = ({
               <div className="text-xs text-slate-400">Before</div>
               <div className="text-base font-bold text-slate-200">{formatINR(baselineSummary.usableBalance)}</div>
             </div>
-            <ArrowRight className="h-4 w-4 text-slate-500" />
+            <ArrowRight className="h-4 w-4 text-slate-400" />
             <div>
               <div className="text-xs text-slate-400">After</div>
               <div
@@ -146,13 +158,13 @@ export const ScenarioResults: React.FC<ScenarioResultsProps> = ({
 
         {/* Metric 2: Daily Allowance */}
         <Card className="bg-slate-900/90 border-slate-800">
-          <div className="text-[11px] font-semibold text-slate-400 uppercase">Daily Allowance</div>
+          <div className="text-[11px] font-semibold text-slate-400 uppercase">Daily Safe Spend</div>
           <div className="mt-2 flex items-center justify-between">
             <div>
               <div className="text-xs text-slate-400">Before</div>
               <div className="text-base font-bold text-slate-200">{formatINR(baselineSummary.dailySpendingAllowance)}/d</div>
             </div>
-            <ArrowRight className="h-4 w-4 text-slate-500" />
+            <ArrowRight className="h-4 w-4 text-slate-400" />
             <div>
               <div className="text-xs text-slate-400">After</div>
               <div
@@ -170,7 +182,33 @@ export const ScenarioResults: React.FC<ScenarioResultsProps> = ({
           </div>
         </Card>
 
-        {/* Metric 3: Risk Level */}
+        {/* Metric 3: Projected Month-End Balance */}
+        <Card className="bg-slate-900/90 border-slate-800">
+          <div className="text-[11px] font-semibold text-slate-400 uppercase">Projected Month-End</div>
+          <div className="mt-2 flex items-center justify-between">
+            <div>
+              <div className="text-xs text-slate-400">Before</div>
+              <div className="text-base font-bold text-slate-200">{formatINR(baselineSummary.projectedEndBalance)}</div>
+            </div>
+            <ArrowRight className="h-4 w-4 text-slate-400" />
+            <div>
+              <div className="text-xs text-slate-400">After</div>
+              <div
+                className={`text-base font-bold ${
+                  simulatedSummary.projectedEndBalance < 0 ? 'text-rose-400' : 'text-emerald-400'
+                }`}
+              >
+                {formatINR(simulatedSummary.projectedEndBalance)}
+              </div>
+            </div>
+          </div>
+          <div className="mt-2 text-xs font-medium text-rose-400 flex items-center gap-1">
+            <TrendingDown className="h-3 w-3" />
+            <span>Delta: {formatINR(endBalanceDelta)}</span>
+          </div>
+        </Card>
+
+        {/* Metric 4: Risk Level */}
         <Card className="bg-slate-900/90 border-slate-800">
           <div className="text-[11px] font-semibold text-slate-400 uppercase">Financial Risk</div>
           <div className="mt-2 flex items-center justify-between">
@@ -178,7 +216,7 @@ export const ScenarioResults: React.FC<ScenarioResultsProps> = ({
               <div className="text-xs text-slate-400">Before</div>
               <div className="text-sm font-bold uppercase text-slate-200">{baselineRisk.level}</div>
             </div>
-            <ArrowRight className="h-4 w-4 text-slate-500" />
+            <ArrowRight className="h-4 w-4 text-slate-400" />
             <div>
               <div className="text-xs text-slate-400">After</div>
               <div
@@ -199,7 +237,7 @@ export const ScenarioResults: React.FC<ScenarioResultsProps> = ({
           </div>
         </Card>
 
-        {/* Metric 4: Health Score */}
+        {/* Metric 5: Health Score */}
         <Card className="bg-slate-900/90 border-slate-800">
           <div className="text-[11px] font-semibold text-slate-400 uppercase">Health Score</div>
           <div className="mt-2 flex items-center justify-between">
@@ -207,7 +245,7 @@ export const ScenarioResults: React.FC<ScenarioResultsProps> = ({
               <div className="text-xs text-slate-400">Before</div>
               <div className="text-base font-bold text-slate-200">{baselineHealth.overallScore}/100</div>
             </div>
-            <ArrowRight className="h-4 w-4 text-slate-500" />
+            <ArrowRight className="h-4 w-4 text-slate-400" />
             <div>
               <div className="text-xs text-slate-400">After</div>
               <div
@@ -224,6 +262,47 @@ export const ScenarioResults: React.FC<ScenarioResultsProps> = ({
           </div>
         </Card>
       </div>
+
+      {/* Decision Clarity Matrix: Spend Now vs. Reduce vs. Delay */}
+      <Card className="bg-slate-900/90 border-slate-800 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-800">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-blue-400" />
+            <h2 className="text-xs uppercase font-bold tracking-wider text-slate-300">
+              Decision Clarity & Trade-off Pathways
+            </h2>
+          </div>
+          <span className="text-xs text-slate-400">
+            Runway Cost: <strong className="text-amber-400">{runwayDaysConsumed} days</strong> of safe daily allowance
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div className="p-3 rounded-lg bg-slate-950/60 border border-slate-800">
+            <div className="font-bold text-white mb-1">1. Spend Now ({formatINR(scenario.amount)})</div>
+            <p className="text-slate-400 leading-relaxed">
+              Leaves <strong className="text-slate-200">{formatINR(simulatedSummary.usableBalance)}</strong> usable cash and adjusts safe daily spend to{' '}
+              <strong className="text-slate-200">{formatINR(simulatedSummary.dailySpendingAllowance)}/day</strong> over the remaining{' '}
+              {baselineSummary.daysRemaining} days.
+            </p>
+          </div>
+
+          <div className="p-3 rounded-lg bg-slate-950/60 border border-slate-800">
+            <div className="font-bold text-emerald-400 mb-1">2. Trim 30% ({formatINR(reducedAmount)})</div>
+            <p className="text-slate-400 leading-relaxed">
+              Opting for a {formatINR(reducedAmount)} alternative retains{' '}
+              <strong className="text-emerald-400">+{formatINR(savedByReducing)}</strong> in buffer and protects your month-end cash trajectory.
+            </p>
+          </div>
+
+          <div className="p-3 rounded-lg bg-slate-950/60 border border-slate-800">
+            <div className="font-bold text-blue-400 mb-1">3. Delay & Pace (14-Day Micro-Save)</div>
+            <p className="text-slate-400 leading-relaxed">
+              Setting aside <strong className="text-blue-400">{formatINR(twoWeekDailySaveRate)}/day</strong> for 2 weeks funds "{scenario.name}" without shocking today's liquidity.
+            </p>
+          </div>
+        </div>
+      </Card>
 
       {/* Commitments & Savings Impact Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -280,6 +359,17 @@ export const ScenarioResults: React.FC<ScenarioResultsProps> = ({
             )}
           </div>
         </Card>
+      </div>
+
+      {/* Simulation Assumptions Note */}
+      <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 text-xs text-slate-400 flex items-start gap-2">
+        <Info className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
+        <p>
+          <strong>Simulation & Forecast Assumptions:</strong> What-if modeling clones your active ledger in memory, deducts{' '}
+          <strong className="text-slate-200">{formatINR(scenario.amount)}</strong> under{' '}
+          <strong className="text-slate-200">{scenario.category}</strong>, and recalculates
+          all 5 health factors while keeping unpaid bills ({formatINR(baselineSummary.unpaidCommitmentsReserved)}) and locked savings ({formatINR(baselineSummary.savingsReserved)}) ring-fenced.
+        </p>
       </div>
 
       {/* Simulator Execution Bar */}
@@ -360,4 +450,6 @@ export const ScenarioResults: React.FC<ScenarioResultsProps> = ({
       </Modal>
     </div>
   );
-};
+});
+
+ScenarioResults.displayName = 'ScenarioResults';

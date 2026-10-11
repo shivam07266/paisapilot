@@ -1,15 +1,19 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, memo } from 'react';
 import { Card } from '../ui/Card';
 import { Transaction } from '../../domain/types';
 import { formatINR, formatPercent, getCategoryColor } from '../../utils/formatting';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { PieChart as ChartIcon } from 'lucide-react';
 
-interface SpendingChartProps {
+export interface SpendingChartProps {
   transactions: Transaction[];
 }
 
-export const SpendingChart: React.FC<SpendingChartProps> = ({ transactions }) => {
+/**
+ * Renders the category spending breakdown using a responsive Recharts donut chart,
+ * visual progress list, and a screen-reader accessible data summary table.
+ */
+export const SpendingChart: React.FC<SpendingChartProps> = memo(({ transactions }) => {
   const categoryData = useMemo(() => {
     const expenseTxs = transactions.filter((t) => t.type === 'expense');
     const totalSpent = expenseTxs.reduce((sum, t) => sum + t.amount, 0);
@@ -37,8 +41,8 @@ export const SpendingChart: React.FC<SpendingChartProps> = ({ transactions }) =>
     return (
       <Card className="bg-slate-900/90 border-slate-800">
         <div className="flex items-center gap-2 mb-3">
-          <ChartIcon className="h-4 w-4 text-blue-400" />
-          <h3 className="text-sm font-semibold text-slate-200">Spending by Category</h3>
+          <ChartIcon className="h-4 w-4 text-blue-400" aria-hidden="true" />
+          <h2 className="text-sm font-semibold text-slate-200">Spending by Category</h2>
         </div>
         <div className="p-8 text-center text-xs text-slate-400">
           No expenses recorded yet in this budget cycle.
@@ -51,8 +55,8 @@ export const SpendingChart: React.FC<SpendingChartProps> = ({ transactions }) =>
     <Card className="bg-slate-900/90 border-slate-800">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <ChartIcon className="h-4 w-4 text-blue-400" />
-          <h3 className="text-sm font-semibold text-slate-200">Spending by Category</h3>
+          <ChartIcon className="h-4 w-4 text-blue-400" aria-hidden="true" />
+          <h2 className="text-sm font-semibold text-slate-200">Spending by Category</h2>
         </div>
         <span className="text-xs text-slate-400 font-medium">
           Total: <strong className="text-slate-100 font-semibold">{formatINR(categoryData.totalSpent)}</strong>
@@ -61,7 +65,7 @@ export const SpendingChart: React.FC<SpendingChartProps> = ({ transactions }) =>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
         {/* Recharts Donut */}
-        <div className="md:col-span-5 h-48 w-full">
+        <div className="md:col-span-5 h-48 min-h-[12rem] w-full" aria-hidden="true">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -73,12 +77,15 @@ export const SpendingChart: React.FC<SpendingChartProps> = ({ transactions }) =>
                 paddingAngle={3}
                 dataKey="value"
               >
-                {categoryData.items.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} stroke="#0f172a" strokeWidth={2} />
+                {categoryData.items.map((entry) => (
+                  <Cell key={`cell-${entry.name}`} fill={entry.color} stroke="#0f172a" strokeWidth={2} />
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value: any) => [formatINR(Number(value) || 0), 'Spent']}
+                formatter={(value: number | string | readonly (number | string)[] | undefined) => [
+                  formatINR(Number(value) || 0),
+                  'Spent',
+                ]}
                 contentStyle={{
                   backgroundColor: '#0f172a',
                   borderColor: '#1e293b',
@@ -98,7 +105,7 @@ export const SpendingChart: React.FC<SpendingChartProps> = ({ transactions }) =>
             <div key={item.name} className="text-xs">
               <div className="flex justify-between items-center mb-1">
                 <span className="flex items-center gap-1.5 text-slate-300 font-medium">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} aria-hidden="true" />
                   {item.name}
                 </span>
                 <span className="text-slate-300 font-semibold">
@@ -106,7 +113,14 @@ export const SpendingChart: React.FC<SpendingChartProps> = ({ transactions }) =>
                   <span className="text-[10px] text-slate-400 font-normal">({formatPercent(item.percent)})</span>
                 </span>
               </div>
-              <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+              <div
+                className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden"
+                role="progressbar"
+                aria-valuenow={Math.round(item.percent)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={`${item.name} share of total spending`}
+              >
                 <div
                   className="h-full rounded-full transition-all duration-300"
                   style={{ width: `${item.percent}%`, backgroundColor: item.color }}
@@ -139,4 +153,6 @@ export const SpendingChart: React.FC<SpendingChartProps> = ({ transactions }) =>
       </div>
     </Card>
   );
-};
+});
+
+SpendingChart.displayName = 'SpendingChart';

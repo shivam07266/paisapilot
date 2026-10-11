@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useId } from 'react';
 import { X } from 'lucide-react';
 
 export interface ModalProps {
@@ -20,6 +20,7 @@ export const Modal: React.FC<ModalProps> = ({
 }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
+  const uniqueId = useId();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -95,14 +96,15 @@ export const Modal: React.FC<ModalProps> = ({
     xl: 'max-w-2xl',
   };
 
-  const descId = description ? 'modal-description' : undefined;
+  const titleId = `modal-title-${uniqueId}`;
+  const descId = description ? `modal-description-${uniqueId}` : undefined;
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-black/75 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="modal-title"
+      aria-labelledby={titleId}
       aria-describedby={descId}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
@@ -116,7 +118,7 @@ export const Modal: React.FC<ModalProps> = ({
       >
         <div className="flex items-start justify-between pb-3 border-b border-slate-800 mb-4">
           <div>
-            <h2 id="modal-title" className="text-lg font-semibold text-white">
+            <h2 id={titleId} className="text-lg font-semibold text-white">
               {title}
             </h2>
             {description && (

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useFinance } from '../hooks/useFinance';
 import { GoalCard } from '../components/goals/GoalCard';
 import { GoalFormModal } from '../components/goals/GoalFormModal';
@@ -13,8 +13,12 @@ export const GoalsPage: React.FC = () => {
     useFinance();
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const totalTarget = state.savingsGoals.reduce((sum, g) => sum + g.targetAmount, 0);
-  const totalSaved = state.savingsGoals.reduce((sum, g) => sum + g.currentAmount, 0);
+  const { totalTarget, totalSaved } = useMemo(() => {
+    return {
+      totalTarget: state.savingsGoals.reduce((sum, g) => sum + g.targetAmount, 0),
+      totalSaved: state.savingsGoals.reduce((sum, g) => sum + g.currentAmount, 0),
+    };
+  }, [state.savingsGoals]);
 
   return (
     <div className="space-y-6">

@@ -74,6 +74,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
+            aria-pressed={type === 'expense'}
             onClick={() => handleTypeChange('expense')}
             className={`py-2 px-3 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
               type === 'expense'
@@ -85,6 +86,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           </button>
           <button
             type="button"
+            aria-pressed={type === 'income'}
             onClick={() => handleTypeChange('income')}
             className={`py-2 px-3 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
               type === 'income'

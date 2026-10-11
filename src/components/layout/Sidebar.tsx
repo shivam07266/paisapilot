@@ -19,7 +19,7 @@ interface SidebarProps {
   onResetDemo: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ onResetDemo }) => {
+export const Sidebar: React.FC<SidebarProps> = React.memo(({ onResetDemo }) => {
   const { summary, exportData } = useFinance();
 
   const navItems = [
@@ -44,12 +44,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onResetDemo }) => {
             <span className="font-extrabold text-lg tracking-tight">₹P</span>
           </div>
           <div>
-            <h1 className="text-base font-bold text-white tracking-tight flex items-center gap-1.5">
+            <div className="text-base font-bold text-white tracking-tight flex items-center gap-1.5">
               PaisaPilot
               <span className="text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
                 v2.0
               </span>
-            </h1>
+            </div>
             <p className="text-[11px] text-slate-400">Your money. Your decisions.</p>
           </div>
         </div>
@@ -72,7 +72,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onResetDemo }) => {
       </div>
 
       {/* Nav Links */}
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto" aria-label="Primary Sidebar Navigation">
         <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
           Main Menu
         </div>
@@ -130,4 +130,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onResetDemo }) => {
       </div>
     </aside>
   );
-};
+});
+
+Sidebar.displayName = 'Sidebar';

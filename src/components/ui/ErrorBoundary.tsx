@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from './Button';
 
@@ -28,8 +28,8 @@ export class ErrorBoundary extends Component<Props, State> {
   private handleReset = () => {
     try {
       localStorage.removeItem('paisapilot_state_v1');
-    } catch {
-      // Ignore
+    } catch (err) {
+      console.warn('Failed to clear stored state on reset:', err);
     }
     window.location.reload();
   };

@@ -52,7 +52,7 @@ interface SimulatorFormProps {
   activeScenario?: SimulationScenario | null;
 }
 
-export const SimulatorForm: React.FC<SimulatorFormProps> = ({
+export const SimulatorForm: React.FC<SimulatorFormProps> = React.memo(({
   onSimulate,
   onReset,
   activeScenario,
@@ -113,9 +113,9 @@ export const SimulatorForm: React.FC<SimulatorFormProps> = ({
       {/* Quick Gen Z Presets */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
             Quick Decision Presets
-          </label>
+          </span>
           <span className="text-[11px] text-slate-400">Click to preview instantly</span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
@@ -145,7 +145,7 @@ export const SimulatorForm: React.FC<SimulatorFormProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-blue-400" />
-            <h3 className="text-sm font-semibold text-white">Custom Expense Simulator</h3>
+            <h2 className="text-sm font-semibold text-white">Custom Expense Simulator</h2>
           </div>
           {activeScenario && (
             <button
@@ -253,4 +253,6 @@ export const SimulatorForm: React.FC<SimulatorFormProps> = ({
       </form>
     </div>
   );
-};
+});
+
+SimulatorForm.displayName = 'SimulatorForm';

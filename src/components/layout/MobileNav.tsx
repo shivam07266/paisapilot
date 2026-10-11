@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -19,9 +19,20 @@ interface MobileNavProps {
   onResetDemo: () => void;
 }
 
-export const MobileNav: React.FC<MobileNavProps> = ({ onResetDemo }) => {
+export const MobileNav: React.FC<MobileNavProps> = React.memo(({ onResetDemo }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { exportData } = useFinance();
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
 
   const navItems = [
     { to: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -60,8 +71,9 @@ export const MobileNav: React.FC<MobileNavProps> = ({ onResetDemo }) => {
           className="md:hidden fixed inset-0 top-[53px] z-50 bg-slate-950/95 backdrop-blur-md p-4 flex flex-col justify-between overflow-y-auto"
           role="dialog"
           aria-modal="true"
+          aria-label="Mobile Navigation Drawer"
         >
-          <nav className="space-y-1">
+          <nav className="space-y-1" aria-label="Mobile Menu">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -165,4 +177,6 @@ export const MobileNav: React.FC<MobileNavProps> = ({ onResetDemo }) => {
       </nav>
     </>
   );
-};
+});
+
+MobileNav.displayName = 'MobileNav';

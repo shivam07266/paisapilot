@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AppState, SimulationScenario } from '../../domain/types';
 import { simulateScenario } from '../../domain/financeEngine';
 import { formatINR } from '../../utils/formatting';
@@ -12,7 +12,7 @@ interface ScenarioComparisonProps {
   onApplyScenario: (scenario: SimulationScenario) => void;
 }
 
-export const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
+export const ScenarioComparison: React.FC<ScenarioComparisonProps> = React.memo(({
   state,
   scenarioA,
   onApplyScenario,
@@ -20,16 +20,19 @@ export const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
   const [altName, setAltName] = useState('Budget-friendly Alternative');
   const [altAmount, setAltAmount] = useState<number>(Math.round(scenarioA.amount * 0.6));
 
-  const scenarioB: SimulationScenario = {
-    id: 'sim-alt-b',
-    name: altName,
-    category: scenarioA.category,
-    amount: Math.max(1, altAmount),
-    proposedDate: scenarioA.proposedDate,
-  };
+  const scenarioB: SimulationScenario = useMemo(
+    () => ({
+      id: 'sim-alt-b',
+      name: altName,
+      category: scenarioA.category,
+      amount: Math.max(1, altAmount),
+      proposedDate: scenarioA.proposedDate,
+    }),
+    [altName, scenarioA.category, altAmount, scenarioA.proposedDate]
+  );
 
-  const resultA = simulateScenario(state, scenarioA);
-  const resultB = simulateScenario(state, scenarioB);
+  const resultA = useMemo(() => simulateScenario(state, scenarioA), [state, scenarioA]);
+  const resultB = useMemo(() => simulateScenario(state, scenarioB), [state, scenarioB]);
 
   const savingsDiff = scenarioA.amount - scenarioB.amount;
   const dailyAllowanceDiff =
@@ -40,7 +43,7 @@ export const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-3 border-b border-slate-800">
         <div className="flex items-center gap-2">
           <ArrowLeftRight className="h-4 w-4 text-blue-400" />
-          <h3 className="text-sm font-semibold text-white">Compare Alternative Decision (A vs B)</h3>
+          <h2 className="text-sm font-semibold text-white">Compare Alternative Decision (A vs B)</h2>
         </div>
         <span className="text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
           Potential Savings: {formatINR(Math.max(0, savingsDiff))}
@@ -170,4 +173,6 @@ export const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
       )}
     </Card>
   );
-};
+});
+
+ScenarioComparison.displayName = 'ScenarioComparison';
