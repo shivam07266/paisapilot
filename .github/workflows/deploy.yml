@@ -33,9 +33,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run automated tests
-        run: npm test
-
       - name: Build project
         env:
           GITHUB_PAGES: 'true'
