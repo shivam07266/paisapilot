@@ -13,7 +13,7 @@ import { InsightsPage } from './pages/InsightsPage';
 export function App() {
   return (
     <FinanceProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
           <Route path="/" element={<AppShell />}>
             <Route index element={<DashboardPage />} />
