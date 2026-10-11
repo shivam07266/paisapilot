@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { FinanceProvider } from './context/FinanceContext';
 import { AppShell } from './components/layout/AppShell';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { DashboardPage } from './pages/DashboardPage';
 
 // Lazy-load secondary views for Core Web Vitals & bundle splitting
@@ -20,11 +21,16 @@ const RouteLoadingFallback: React.FC = () => (
   </div>
 );
 
+// Safely normalize basename so it is never relative ('./') and doesn't break React Router
+const rawBase = import.meta.env.BASE_URL || '/';
+const routerBasename = rawBase.replace(/^\./, '').replace(/\/+$/, '') || '/';
+
 export function App() {
   return (
-    <FinanceProvider>
-      <BrowserRouter basename={import.meta.env.BASE_URL}>
-        <Routes>
+    <ErrorBoundary>
+      <FinanceProvider>
+        <BrowserRouter basename={routerBasename}>
+          <Routes>
           <Route path="/" element={<AppShell />}>
             <Route index element={<DashboardPage />} />
             <Route
@@ -78,8 +84,9 @@ export function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
-      </BrowserRouter>
-    </FinanceProvider>
+        </BrowserRouter>
+      </FinanceProvider>
+    </ErrorBoundary>
   );
 }
 
